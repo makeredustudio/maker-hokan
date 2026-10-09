@@ -1,0 +1,9 @@
+# 限速區示範檔：放喺 SD 卡根目錄，檔名 zones.csv
+# 格式：lat,lon,radius_m,limit,name   （name 用英文，唔好有逗號）
+# 以下座標只係示範，請用 Google Maps 長按地圖攞你自己路段嘅座標再改
+lat,lon,radius_m,limit,name
+22.4120,114.2140,800,100,Tolo Highway
+22.3490,114.1050,600,80,Tsing Sha Hwy
+22.3193,114.1694,300,50,Nathan Road
+22.2810,114.1580,250,50,Central
+22.3360,114.1750,150,30,School Zone

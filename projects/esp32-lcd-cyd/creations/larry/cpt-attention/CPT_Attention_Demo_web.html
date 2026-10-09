@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>持續注意力示範（CPT 風格・教學用）</title>
+<!--
+  持續注意力示範（CPT 風格・教學用）網頁版 v1.0
+  ⚠️ 重要聲明：呢個唔係 Conners CPT 3 / Conners CPT™ 3，亦唔係任何 Multi-Health Systems (MHS) 產品。
+  只係參考「持續表現測試（CPT）」一般公開原理嘅簡化教學示範。
+  唔可以用嚟做臨床診斷、篩查或任何醫療用途。結果只係原始計數，冇常模、冇 ADHD 臨界值。
+  正式臨床工具請查 MHS：https://www.mhs.com/
+  單一 HTML 檔案，唔使上網、唔會上傳任何資料。
+-->
+<style>
+  :root{--bg:#10141c;--panel:#1d2430;--text:#e6e9ef;--mute:#8a93a3;--accent:#22d3ee;--ok:#22c55e;--bad:#ef4444;--warn:#f59e0b;--yellow:#facc15}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,"Segoe UI","Noto Sans TC","PingFang HK","Microsoft JhengHei",sans-serif;-webkit-user-select:none;user-select:none;overflow:hidden}
+  #app{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 16px 56px;touch-action:manipulation}
+  .screen{display:none;width:100%;max-width:640px;text-align:center}
+  .screen.on{display:block}
+  h1{font-size:clamp(22px,5vw,34px);color:var(--accent);margin-bottom:6px}
+  .sub{color:var(--warn);margin-bottom:16px}
+  .panel{background:var(--panel);border-radius:12px;padding:14px 16px;text-align:left;line-height:1.7;margin-bottom:14px;font-size:15px}
+  .panel b{color:var(--yellow)}
+  .btn{display:inline-block;background:var(--accent);color:#04202a;border:none;border-radius:12px;font-size:20px;font-weight:700;padding:14px 32px;margin:6px;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--accent);border:2px solid var(--accent);font-size:16px;padding:10px 20px}
+  .mute{color:var(--mute);font-size:14px}
+  #progress{position:fixed;top:12px;left:0;right:0;text-align:center;color:var(--mute);font-size:15px}
+  #stage{width:min(70vw,60vh,340px);aspect-ratio:1;margin:0 auto;border-radius:20px;display:flex;align-items:center;justify-content:center}
+  #stage.letter{background:var(--yellow);border:3px solid #fff}
+  #letter{font-size:min(48vw,42vh,240px);font-weight:900;color:#000;line-height:1;font-family:Arial,Helvetica,sans-serif}
+  #fix{font-size:min(20vw,80px);color:var(--mute)}
+  #hint{margin-top:14px;color:var(--mute);font-size:14px}
+  #fb{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--panel);border-radius:14px;padding:16px 28px;font-size:28px;font-weight:800;display:none}
+  table{width:100%;border-collapse:collapse;margin:8px 0 14px;font-size:17px}
+  td{padding:7px 10px;border-bottom:1px solid #2b3442}
+  td:last-child{text-align:right;font-variant-numeric:tabular-nums;color:var(--yellow);font-weight:700}
+  #banner{position:fixed;left:0;right:0;bottom:0;background:#5a0d0d;color:#fff;font-size:12px;text-align:center;padding:8px 6px;line-height:1.4}
+  .danger{background:#7f1d1d;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-weight:700}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- 首頁 -->
+  <div class="screen on" id="sHome">
+    <h1>持續注意力示範</h1>
+    <div class="sub">CPT 風格・教學用・網頁版</div>
+    <div class="panel">
+      ⚠️ <b>唔係</b> Conners CPT 3（MHS 專有臨床軟件）<br>
+      ⚠️ <b>唔可以</b>用嚟診斷、篩查或任何醫療用途<br>
+      ⚠️ 結果只係原始計數，冇常模、冇 ADHD 分數線
+    </div>
+    <div class="panel">
+      <b>玩法：</b>見到字母<b>唔係 X</b> → 盡快撳屏幕（電腦可以撳<b>空白鍵</b>）<br>
+      見到 <b>X</b> → <b>唔好撳</b><br>
+      先練習 <span id="pN"></span> 次（有對錯提示），再正式 <span id="mN"></span> 次
+    </div>
+    <button class="btn" id="startBtn">開始</button>
+    <div class="mute" style="margin-top:10px">全部喺你部機運行，唔會上傳任何資料</div>
+  </div>
+
+  <!-- 準備 -->
+  <div class="screen" id="sReady">
+    <h1 id="readyTitle">練習</h1>
+    <p style="font-size:20px;margin:14px 0">準備……</p>
+    <p class="mute">只喺字母<b style="color:var(--yellow)">唔係 X</b> 嗰陣先撳</p>
+  </div>
+
+  <!-- 測試 -->
+  <div class="screen" id="sTrial">
+    <div id="stage"><span id="letter"></span><span id="fix">+</span></div>
+    <div id="hint">唔係 X 就撳・X 就唔好撳</div>
+  </div>
+
+  <!-- 結果 -->
+  <div class="screen" id="sDone">
+    <h1>完成</h1>
+    <div class="danger">教學示範・唔係臨床診斷</div>
+    <table id="resTable"></table>
+    <div class="mute" style="margin-bottom:12px">原始計數而已，冇常模，唔可以標籤任何人</div>
+    <button class="btn" id="againBtn">再玩一次</button>
+    <button class="btn ghost" id="csvBtn">下載 CSV</button>
+  </div>
+</div>
+
+<div id="progress"></div>
+<div id="fb"></div>
+<div id="banner">教學示範 · 唔係 Conners CPT 3 · 唔可作臨床診斷 · TEACHING DEMO ONLY – NOT clinical</div>
+
+<script>
+// ================== 可以改呢度（同 CYD v1.3 一樣） ==================
+const PRACTICE_TRIALS = 10;      // 練習次數
+const MAIN_TRIALS     = 45;      // 正式次數
+const NONTARGET_PCT   = 10;      // X（唔好撳）大約佔幾多 %
+const STIM_MS         = 1500;    // 字母最少顯示時間（毫秒）
+const ISI_MS          = [1500, 2000, 2500]; // 每題反應窗口（字母會留到完）
+const FIXATION_MS     = 400;     // 兩題之間「+」
+const READY_MS        = 2000;    // 準備畫面
+const FEEDBACK_MS     = 700;     // 練習提示時間
+const MIN_RT_MS       = 100;     // 少過呢個當預期式亂撳（Perseveration）
+// ===================================================================
+
+const $ = id => document.getElementById(id);
+$('pN').textContent = PRACTICE_TRIALS; $('mN').textContent = MAIN_TRIALS;
+
+let practice = true, idx = 0, total = PRACTICE_TRIALS;
+let cur = null, state = 'home', timer = null, log = [];
+let stats;
+
+function resetStats(){ stats = {hits:0, om:0, com:0, cr:0, persev:0, rts:[]}; }
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); $(id).classList.add('on'); }
+function progress(t){ $('progress').textContent = t || ''; }
+
+function start(){
+  practice = true; idx = 0; total = PRACTICE_TRIALS; log = []; resetStats();
+  ready();
+}
+function ready(){
+  state = 'ready'; progress('');
+  $('readyTitle').textContent = practice ? '練習' : '正式開始';
+  show('sReady');
+  timer = setTimeout(fixation, READY_MS);
+}
+function fixation(){
+  state = 'fix'; show('sTrial');
+  $('stage').className = ''; $('letter').style.display='none'; $('fix').style.display='inline';
+  progress(`${practice ? '練習' : '正式'}  ${idx+1} / ${total}`);
+  timer = setTimeout(stimulus, FIXATION_MS);
+}
+function pickLetter(){
+  const nontarget = Math.random()*100 < NONTARGET_PCT;
+  let L = 'X';
+  if(!nontarget){ do { L = String.fromCharCode(65 + Math.floor(Math.random()*26)); } while(L==='X'); }
+  let isi = ISI_MS[Math.floor(Math.random()*ISI_MS.length)];
+  if(isi < STIM_MS) isi = STIM_MS;
+  return {L, nontarget, isi};
+}
+function stimulus(){
+  cur = pickLetter(); cur.t0 = performance.now(); cur.responded = false; cur.rt = null;
+  state = 'stim';
+  $('fix').style.display='none'; $('letter').style.display='inline'; $('letter').textContent = cur.L;
+  $('stage').className = 'letter';
+  timer = setTimeout(endTrial, cur.isi);
+}
+function respond(){
+  if(state==='home'){ return; }
+  if(state!=='stim' || cur.responded) return;   // 每題只計第一次撳
+  cur.responded = true;
+  cur.rt = Math.round(performance.now() - cur.t0);
+}
+function endTrial(){
+  state = 'between';
+  let result;
+  if(!cur.nontarget){
+    if(cur.responded){
+      if(cur.rt < MIN_RT_MS){ result='PERSEV'; stats.persev++; }
+      else { result='HIT'; stats.hits++; stats.rts.push(cur.rt); }
+    } else { result='MISS'; stats.om++; }
+  } else {
+    if(cur.responded){ result='FALSE'; stats.com++; } else { result='HOLD'; stats.cr++; }
+  }
+  log.push({block: practice?'practice':'main', trial: idx+1, letter: cur.L, nontarget: cur.nontarget?1:0, isi: cur.isi, pressed: cur.responded?1:0, rt: cur.rt ?? '', result});
+
+  if(practice){
+    const map = {HIT:['撳啱 ✔',true], MISS:['漏撳 ✘',false], FALSE:['唔好撳 X ✘',false], HOLD:['忍得住 ✔',true], PERSEV:['太快（亂撳）✘',false]};
+    const [msg, ok] = map[result];
+    const fb = $('fb'); fb.textContent = msg; fb.style.color = ok ? 'var(--ok)' : 'var(--bad)'; fb.style.display='block';
+    timer = setTimeout(()=>{ fb.style.display='none'; next(); }, FEEDBACK_MS);
+  } else next();
+}
+function next(){
+  idx++;
+  if(idx >= total){
+    if(practice){ practice=false; idx=0; total=MAIN_TRIALS; resetStats(); ready(); }
+    else done();
+    return;
+  }
+  fixation();
+}
+function done(){
+  state = 'done'; progress(''); show('sDone');
+  const n = stats.rts.length;
+  const mean = n ? stats.rts.reduce((a,b)=>a+b,0)/n : 0;
+  const sd = n>1 ? Math.sqrt(stats.rts.reduce((a,b)=>a+(b-mean)**2,0)/(n-1)) : 0;
+  const rows = [
+    ['撳啱（Hits）', stats.hits],
+    ['漏撳（Omissions）', stats.om],
+    ['誤撳 X（Commissions）', stats.com],
+    ['忍得住 X（Correct holds）', stats.cr],
+    ['太快亂撳（<100ms）', stats.persev],
+    ['平均反應時間', Math.round(mean)+' ms'],
+    ['反應時間 SD（簡單）', Math.round(sd)+' ms'],
+  ];
+  $('resTable').innerHTML = rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+}
+function downloadCSV(){
+  const head = 'block,trial,letter,nontarget,isi_ms,pressed,rt_ms,result';
+  const body = log.map(r=>[r.block,r.trial,r.letter,r.nontarget,r.isi,r.pressed,r.rt,r.result].join(',')).join('\n');
+  const blob = new Blob(['\ufeff' + '# Teaching demo only - NOT Conners CPT 3 - NOT clinical\n' + head + '\n' + body], {type:'text/csv'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'cpt_demo_' + new Date().toISOString().slice(0,19).replace(/[:T]/g,'-') + '.csv'; a.click();
+}
+
+// 輸入：觸控 / 滑鼠 / 空白鍵（只計按落，避免長按連發）
+document.addEventListener('pointerdown', e => { if(e.target.closest('button')) return; e.preventDefault(); respond(); }, {passive:false});
+document.addEventListener('keydown', e => { if(e.code==='Space'||e.key===' '){ e.preventDefault(); if(!e.repeat) respond(); } });
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+$('startBtn').onclick = start;
+$('againBtn').onclick = () => { clearTimeout(timer); show('sHome'); state='home'; };
+$('csvBtn').onclick = downloadCSV;
+</script>
+</body>
+</html>
